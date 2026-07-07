@@ -56,18 +56,13 @@ ThreadFlow adalah sistem otomatis yang membantu menjaga konsistensi posting di T
 
 ### Tabel Utama
 
-```sql
--- Persona & Konfigurasi
-persona_pillar (id, pillar_name, persona_text, tone_rules, style_examples)
-angle_schedule (id, pillar_name, day_of_week, time_slot, angle)
-
--- Draft & Konten
-drafts (id, pillar_name, angle, topic, status, telegram_message_id, edit_mode)
-thread_posts (id, draft_id, post_order, content)
-
--- History
-history (id, pillar_name, angle, topic, caption, published_at)
-```
+| Tabel | Fungsi |
+|-------|--------|
+| `persona_pillar` | Menyimpan definisi persona untuk setiap content pillar |
+| `angle_schedule` | Jadwal angle (serius/lucu/horror) per hari dan jam |
+| `drafts` | Draft konten yang menunggu approval atau sudah diproses |
+| `thread_posts` | Individual post dalam sebuah thread (satu draft bisa multi-post) |
+| `history` | Arsip konten yang sudah dipublish untuk referensi anti-pengulangan |
 
 ### Status Draft
 
@@ -75,6 +70,8 @@ history (id, pillar_name, angle, topic, caption, published_at)
 - `awaiting_edit` - Menunggu input revisi (manual/AI)
 - `published` - Sudah terpublish ke Threads
 - `rejected` - Ditolak oleh user
+
+Lihat [database/schema.sql](database/schema.sql) untuk detail lengkap.
 
 ## Workflow
 
@@ -121,6 +118,8 @@ Telegram Trigger (Message + Callback Query)
 │   └─ edit_mode = ai     → AI revision       │
 └─────────────────────────────────────────────┘
 ```
+
+Lihat [docs/dokumentasi-lengkap.md](docs/dokumentasi-lengkap.md) untuk detail alur workflow.
 
 ## Strategi Konten
 
@@ -177,9 +176,8 @@ ZERNIO_ACCOUNT_ID=your_account_id
 ### Database Setup
 
 1. Buat project baru di Supabase
-2. Jalankan SQL migration dari folder `database/`
-3. Isi tabel `persona_pillar` dengan persona Anda
-4. Isi tabel `angle_schedule` dengan jadwal angle
+2. Jalankan SQL dari [database/schema.sql](database/schema.sql) di SQL Editor
+3. Tabel dan data awal akan otomatis terbuat
 
 ### n8n Setup
 
@@ -261,20 +259,16 @@ ZERNIO_ACCOUNT_ID=your_account_id
 
 ```
 ThreadFlow/
-├── src/
-│   ├── Components/
-│   │   └── Dashboard.jsx
-│   ├── App.css
-│   └── index.css
-├── workflows/
-│   ├── workflow-1-generate.json
-│   └── workflow-2-approval.json
 ├── database/
-│   └── migration.sql
+│   └── schema.sql          # Database schema & seed data
 ├── docs/
-│   ├── dokumentasi-lengkap-automation-threads.md
-│   ├── pitch-automation-threads.docx
-│   └── panduan-pengguna-threads.docx
+│   ├── screenshots/        # Workflow screenshots
+│   │   ├── WF1_ThreadFlow.png
+│   │   └── WF2_ThreadFlow.png
+│   └── dokumentasi-lengkap.md
+├── workflows/
+│   ├── Workflow 1.json     # Generate & Send Approval
+│   └── Workflow 2.json     # Approval, Reject, Edit
 └── README.md
 ```
 

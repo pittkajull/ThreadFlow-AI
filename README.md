@@ -1,18 +1,302 @@
-# React + Vite
+# ThreadFlow - Automation Konten & Publikasi Threads
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Sistem automation untuk mengelola publikasi konten di platform Threads dengan AI-powered content generation dan human-in-the-loop approval workflow.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+ThreadFlow adalah sistem otomatis yang membantu menjaga konsistensi posting di Threads (3x sehari) tanpa membebani waktu operasional harian. Sistem ini menggunakan AI untuk generate konten, tetapi tetap memberikan kontrol penuh kepada manusia untuk approval sebelum publikasi.
 
-## React Compiler
+### Fitur Utama
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- Generate konten otomatis 3x sehari (08.00, 12.00, 16.00 WIB)
+- AI-powered topic generation dengan anti-pengulangan
+- Multi-post thread support (utas bersambung)
+- Approval workflow via Telegram
+- Edit manual dan AI-assisted revision
+- Publish otomatis ke Threads via Zernio
 
-Note: This will impact Vite dev & build performances.
+## Tech Stack
 
-## Expanding the Oxlint configuration
+| Komponen | Fungsi |
+|---|---|
+| **n8n** | Orkestrasi automation workflow |
+| **Supabase** | Database untuk menyimpan persona, jadwal, draft, dan history |
+| **Google Gemini** | AI untuk menyusun topik, menulis, dan merevisi caption |
+| **Telegram** | Kanal komunikasi untuk preview, approval, dan revisi |
+| **Zernio** | Layanan publish konten ke Threads |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Arsitektur Sistem
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Schedule      │     │   Telegram      │     │    Zernio       │
+│   Trigger       │     │   Bot           │     │    API          │
+│   (3x daily)    │     │                 │     │                 │
+└────────┬────────┘     └────────┬────────┘     └────────┬────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                         n8n Workflows                           │
+│  ┌──────────────┐    ┌──────────────────────────────────────┐  │
+│  │ Workflow 1   │    │         Workflow 2                    │  │
+│  │ Generate &   │    │  Approval, Reject, Edit              │  │
+│  │ Send Approval│    │  (Manual & AI)                        │  │
+│  └──────────────┘    └──────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Google Gemini  │     │    Supabase     │     │    Threads      │
+│  (Strategist,   │     │    Database     │     │    Platform     │
+│  Writer, Editor)│     │                 │     │                 │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
+
+## Database Schema
+
+### Tabel Utama
+
+```sql
+-- Persona & Konfigurasi
+persona_pillar (id, pillar_name, persona_text, tone_rules, style_examples)
+angle_schedule (id, pillar_name, day_of_week, time_slot, angle)
+
+-- Draft & Konten
+drafts (id, pillar_name, angle, topic, status, telegram_message_id, edit_mode)
+thread_posts (id, draft_id, post_order, content)
+
+-- History
+history (id, pillar_name, angle, topic, caption, published_at)
+```
+
+### Status Draft
+
+- `pending_approval` - Menunggu approval dari user
+- `awaiting_edit` - Menunggu input revisi (manual/AI)
+- `published` - Sudah terpublish ke Threads
+- `rejected` - Ditolak oleh user
+
+## Workflow
+
+### Workflow 1: Generate & Kirim Approval
+
+```
+Schedule Trigger (08:00, 12:00, 16:00)
+    ↓
+Cek jadwal angle berdasarkan hari & jam
+    ↓
+Cek jumlah draft pending (max 3)
+    ↓
+Ambil persona & history untuk referensi
+    ↓
+AI Strategist → generate topic baru
+    ↓
+AI Writer → tulis draft posts
+    ↓
+AI Editor → revisi & polish
+    ↓
+Simpan ke database (drafts + thread_posts)
+    ↓
+Kirim preview ke Telegram dengan tombol:
+[Approve] [Edit] [Reject]
+```
+
+### Workflow 2: Approval & Edit
+
+```
+Telegram Trigger (Message + Callback Query)
+    ↓
+┌─────────────────────────────────────────────┐
+│ Callback Query (tombol ditekan)             │
+│   ├─ Approve → Publish ke Threads           │
+│   ├─ Reject  → Tandai rejected              │
+│   ├─ Edit    → Tampilkan submenu            │
+│   ├─ Edit Manual → Mode edit manual         │
+│   └─ Edit AI    → Mode edit AI              │
+└─────────────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────────────┐
+│ Reply Message (user membalas)               │
+│   ├─ edit_mode = manual → parsing format    │
+│   └─ edit_mode = ai     → AI revision       │
+└─────────────────────────────────────────────┘
+```
+
+## Strategi Konten
+
+### Jadwal Posting
+
+| Hari | 08.00 | 12.00 | 16.00 |
+|------|-------|-------|-------|
+| Senin | Serius (edukasi) | Lucu (receh) | Serius (pengalaman) |
+| Selasa | Horror | Serius (edukasi) | Lucu |
+| Rabu | Lucu | Horror | Serius (BTS) |
+| Kamis | Serius | Lucu | Horror |
+| Jumat | Horror | Serius | Lucu |
+| Sabtu | Lucu | Serius | Q&A |
+| Minggu | Rekap | Horror | Lucu |
+
+### Angle Definitions
+
+- **Serius** - Insight/edukasi dunia penerbangan dengan nada profesional tapi personal
+- **Lucu** - Humor ringan tentang kehidupan pilot (tanpa melanggar SOP/kerahasiaan)
+- **Horror** - Cerita misteri dunia aviasi yang kredibel dan tidak clickbait
+- **Q&A** - Pertanyaan terbuka untuk followers
+- **Rekap** - Refleksi mingguan dengan nada personal
+
+## Setup & Installation
+
+### Prerequisites
+
+- n8n instance (self-hosted atau cloud)
+- Supabase project
+- Google Gemini API key
+- Telegram Bot Token
+- Zernio account & API key
+
+### Environment Variables
+
+```env
+# Supabase
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_KEY=your_service_key
+
+# Google Gemini
+GEMINI_API_KEY=your_gemini_api_key
+
+# Telegram
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_CHAT_ID=your_chat_id
+
+# Zernio
+ZERNIO_API_KEY=your_api_key
+ZERNIO_ACCOUNT_ID=your_account_id
+```
+
+### Database Setup
+
+1. Buat project baru di Supabase
+2. Jalankan SQL migration dari folder `database/`
+3. Isi tabel `persona_pillar` dengan persona Anda
+4. Isi tabel `angle_schedule` dengan jadwal angle
+
+### n8n Setup
+
+1. Import workflow dari folder `workflows/`
+2. Konfigurasi credentials untuk:
+   - Supabase
+   - Google Gemini
+   - Telegram
+   - Zernio
+3. Update reference ke node sesuai dengan nama di workflow Anda
+4. Aktifkan workflow
+
+## Penggunaan
+
+### Alur Harian
+
+1. **Generate Otomatis** - Sistem generate draft sesuai jadwal
+2. **Notifikasi Telegram** - Preview dikirim ke Telegram Anda
+3. **Review & Action**:
+   - **Approve** → Langsung publish ke Threads
+   - **Edit Manual** → Balas dengan format `1: isi post 1, 2: isi post 2`
+   - **Edit AI** → Balas dengan instruksi revisi (contoh: "bikin lebih santai")
+   - **Reject** → Draft ditolak dan tidak dipublish
+
+### Format Edit Manual
+
+```
+1: Isi post pertama yang sudah direvisi
+
+2: Isi post kedua yang sudah direvisi
+
+3: Isi post ketiga (jika ada)
+```
+
+### Tips Penggunaan
+
+- Caption dibuat **generic tanpa referensi waktu spesifik** agar tetap relevan meski approval tertunda
+- Maksimal **3 draft** boleh menunggu approval bersamaan
+- Reminder akan dikirim tiap **10 menit** untuk draft yang belum direspons
+
+## Troubleshooting
+
+### Error Umum
+
+| Error | Penyebab | Solusi |
+|-------|----------|--------|
+| "Referenced node doesn't exist" | Nama node salah | Ketik ulang `$( ` untuk autocomplete |
+| "Cannot read properties of undefined" | Referensi `.item` gagal | Gunakan `.first()` |
+| Duplikasi post di Threads | `threadItems` salah | Gunakan `.slice(1)` |
+| Error 409 dari Zernio | Double-tap Approve | Tambahkan cek status sebelum publish |
+| Post tidak terpublish semua | `platformSpecificData` salah posisi | Pastikan di dalam `platforms[0]` |
+
+### Debug Tips
+
+- Selalu cek tab Output di n8n sebelum menulis expression
+- Struktur output AI Agent biasanya `$json.output.{field}`
+- Gunakan "All Filters" pada Update Row untuk kondisi ganda
+
+## Roadmap
+
+### Phase 1 (Current)
+- [x] Generate otomatis 3x sehari
+- [x] Approval workflow via Telegram
+- [x] Edit manual & AI revision
+- [x] Multi-post thread support
+- [x] Publish ke Threads
+
+### Phase 2
+- [ ] Guard anti-duplikasi publish
+- [ ] Workflow reminder otomatis
+- [ ] Stabilisasi & testing produksi
+
+### Phase 3
+- [ ] Ekspansi pillar konten (AI, startup, komunitas, management)
+- [ ] Multi-platform support
+- [ ] Analytics & reporting
+
+## Project Structure
+
+```
+ThreadFlow/
+├── src/
+│   ├── Components/
+│   │   └── Dashboard.jsx
+│   ├── App.css
+│   └── index.css
+├── workflows/
+│   ├── workflow-1-generate.json
+│   └── workflow-2-approval.json
+├── database/
+│   └── migration.sql
+├── docs/
+│   ├── dokumentasi-lengkap-automation-threads.md
+│   ├── pitch-automation-threads.docx
+│   └── panduan-pengguna-threads.docx
+└── README.md
+```
+
+## Contributing
+
+1. Fork repository ini
+2. Buat branch fitur (`git checkout -b feature/amazing-feature`)
+3. Commit perubahan (`git commit -m 'Add amazing feature'`)
+4. Push ke branch (`git push origin feature/amazing-feature`)
+5. Buat Pull Request
+
+## License
+
+MIT License - lihat file [LICENSE](LICENSE) untuk detail.
+
+## Acknowledgments
+
+- [n8n](https://n8n.io/) - Workflow automation platform
+- [Supabase](https://supabase.com/) - Open source Firebase alternative
+- [Google Gemini](https://ai.google.dev/) - Generative AI
+- [Zernio](https://zernio.com/) - Social media scheduling & publishing
+
+---
+
+**ThreadFlow** - Maintaining consistent social media presence without the daily operational burden.

@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# n8n workflow files (JANGAN commit — berisi credential IDs & API keys)
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!vite.config.*

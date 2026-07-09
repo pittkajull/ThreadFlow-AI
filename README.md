@@ -14,6 +14,7 @@ ThreadFlow adalah sistem otomatis yang membantu menjaga konsistensi posting di T
 - Approval workflow via Telegram
 - Edit manual dan AI-assisted revision
 - Publish otomatis ke Threads via Zernio
+- **Dashboard** — Monitor semua aktivitas konten dari satu halaman
 
 ## Tech Stack
 
@@ -24,6 +25,7 @@ ThreadFlow adalah sistem otomatis yang membantu menjaga konsistensi posting di T
 | **Google Gemini** | AI untuk menyusun topik, menulis, dan merevisi caption |
 | **Telegram** | Kanal komunikasi untuk preview, approval, dan revisi |
 | **Zernio** | Layanan publish konten ke Threads |
+| **React** | Dashboard untuk monitoring & visualisasi data konten |
 
 ## Arsitektur Sistem
 
@@ -121,6 +123,50 @@ Telegram Trigger (Message + Callback Query)
 
 Lihat [docs/dokumentasi-lengkap.md](docs/dokumentasi-lengkap.md) untuk detail alur workflow.
 
+## Dashboard
+
+ThreadFlow menyediakan dashboard berbasis React untuk memonitor semua aktivitas konten dari satu halaman. Dashboard connect langsung ke Supabase dan menampilkan data secara real-time.
+
+### Fitur Dashboard
+
+| Halaman | Fungsi |
+|---------|--------|
+| **Overview** | Statistik ringkas (pending, published, rejected, total history) + daftar draft terbaru |
+| **Calendar** | Tampilan kalender bulanan dengan color-coded events berdasarkan angle (serius, lucu, horror, Q&A, rekap) |
+| **Drafts** | Daftar semua draft lengkap dengan status, pillar, angle, dan jadwal |
+| **History** | Riwayat publikasi konten yang sudah terpublish |
+
+### Color Coding Angle
+
+| Angle | Warna |
+|-------|-------|
+| Serius (edukasi, BTS, pengalaman) | Biru |
+| Lucu (receh) | Kuning |
+| Horror (misteri aviasi) | Merah |
+| Q&A | Hijau |
+| Rekap (refleksi) | Ungu |
+
+### Menjalankan Dashboard
+
+```bash
+cd dashboard
+npm install
+npm run dev
+```
+
+Dashboard akan berjalan di `http://localhost:5173/`.
+
+### Konfigurasi
+
+Buat file `dashboard/.env` dengan isi:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key
+```
+
+> **Catatan:** Gunakan Supabase **anon key** (bukan service key) karena dashboard diakses dari browser.
+
 ## Strategi Konten
 
 ### Jadwal Posting
@@ -181,7 +227,7 @@ ZERNIO_ACCOUNT_ID=your_account_id
 
 ### n8n Setup
 
-1. Import workflow dari folder `workflows/`
+1. Import workflow `.json` lo ke n8n (file workflow tidak di-track di GitHub — copy dari backup lokal lo)
 2. Konfigurasi credentials untuk:
    - Supabase
    - Google Gemini
@@ -249,6 +295,7 @@ ZERNIO_ACCOUNT_ID=your_account_id
 - [ ] Guard anti-duplikasi publish
 - [ ] Workflow reminder otomatis
 - [ ] Stabilisasi & testing produksi
+- [x] Dashboard monitoring (React + Supabase)
 
 ### Phase 3
 - [ ] Ekspansi pillar konten (AI, startup, komunitas, management)
@@ -259,18 +306,32 @@ ZERNIO_ACCOUNT_ID=your_account_id
 
 ```
 ThreadFlow/
+├── dashboard/                  # React dashboard untuk monitoring
+│   ├── src/
+│   │   ├── components/
+│   │   │   └── Dashboard.jsx   # Komponen utama dashboard
+│   │   ├── lib/
+│   │   │   └── supabase.js     # Supabase client
+│   │   ├── App.jsx             # Layout & routing
+│   │   ├── App.css             # Styling
+│   │   ├── index.css           # Global styles
+│   │   └── main.jsx            # Entry point
+│   ├── .env                    # Supabase credentials (tidak di-track)
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
 ├── database/
-│   └── schema.sql          # Database schema & seed data
+│   └── schema.sql              # Database schema & seed data
 ├── docs/
-│   ├── screenshots/        # Workflow screenshots
+│   ├── screenshots/            # Workflow screenshots
 │   │   ├── WF1_ThreadFlow.png
 │   │   └── WF2_ThreadFlow.png
 │   └── dokumentasi-lengkap.md
-├── workflows/
-│   ├── Workflow 1.json     # Generate & Send Approval
-│   └── Workflow 2.json     # Approval, Reject, Edit
+├── .gitignore
 └── README.md
 ```
+
+> **Catatan:** File workflow n8n (`.json`) tidak di-track di GitHub karena berisi credential IDs dan API keys. Import langsung dari file lokal lo.
 
 ## Contributing
 

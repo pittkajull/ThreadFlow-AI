@@ -29,3 +29,11 @@ dist-ssr
 !package-lock.json
 !tsconfig.json
 !vite.config.*
+
+# Environment files (berisi secrets)
+.env
+.env.*
+!.env.example
+
+# MiMoCode agent artifacts
+.mimocode/

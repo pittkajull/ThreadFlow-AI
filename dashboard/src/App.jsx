@@ -85,7 +85,7 @@ function App() {
           </button>
         </nav>
         <button className="logout-btn" onClick={handleLogout}>
-          Keluar
+          Sign out
         </button>
       </aside>
       <main className="main">

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-const DAYS = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
-const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
 function getAngleClass(angle) {
   const a = angle?.toLowerCase() || ''
@@ -136,7 +136,7 @@ function Overview({ pendingCount, publishedCount, rejectedCount, totalHistory, d
         {drafts.length === 0 ? (
           <div className="empty">
             <div className="empty-icon">📝</div>
-            <p>Belum ada drafts</p>
+            <p>No drafts yet</p>
           </div>
         ) : (
           <div className="table-wrap">
@@ -265,7 +265,7 @@ function DraftsView({ drafts, onRefresh }) {
       {drafts.length === 0 ? (
         <div className="empty">
           <div className="empty-icon">📝</div>
-          <p>Belum ada drafts</p>
+          <p>No drafts yet</p>
         </div>
       ) : (
         <div className="table-wrap">
@@ -311,7 +311,7 @@ function HistoryView({ history }) {
       {history.length === 0 ? (
         <div className="empty">
           <div className="empty-icon">📚</div>
-          <p>Belum ada history publikasi</p>
+          <p>No publication history yet</p>
         </div>
       ) : (
         <div className="table-wrap">
@@ -400,7 +400,7 @@ function EvaluationView() {
             onChange={e => setSelectedVersion(e.target.value)}
             style={selectStyle}
           >
-            <option value="all">Semua Versi</option>
+            <option value="all">All Versions</option>
             {versions.map(v => (
               <option key={v} value={v}>{v}</option>
             ))}
@@ -416,32 +416,32 @@ function EvaluationView() {
           <div className="eval-summary-value">{filtered.length}</div>
         </div>
         <div className="eval-summary-card">
-          <div className="eval-summary-label">Rata-rata Total</div>
+          <div className="eval-summary-label">Average Total</div>
           <div className="eval-summary-value" style={{ color: getScoreColor(avgTotal) }}>{avgTotal}<span style={{ fontSize: 14, color: '#71717a' }}>/40</span></div>
         </div>
         <div className="eval-summary-card">
-          <div className="eval-summary-label">Rata-rata Persona</div>
+          <div className="eval-summary-label">Average Persona</div>
           <div className="eval-score-bar-wrap">
             <div className="eval-score-bar"><div className="eval-score-fill" style={{ width: `${avgPersona * 10}%`, background: '#E4712D' }} /></div>
             <span className="eval-score-num">{avgPersona}</span>
           </div>
         </div>
         <div className="eval-summary-card">
-          <div className="eval-summary-label">Rata-rata Anti-Cliche</div>
+          <div className="eval-summary-label">Average Anti-Cliche</div>
           <div className="eval-score-bar-wrap">
             <div className="eval-score-bar"><div className="eval-score-fill" style={{ width: `${avgCliche * 10}%`, background: '#f59e0b' }} /></div>
             <span className="eval-score-num">{avgCliche}</span>
           </div>
         </div>
         <div className="eval-summary-card">
-          <div className="eval-summary-label">Rata-rata Relevansi</div>
+          <div className="eval-summary-label">Average Relevance</div>
           <div className="eval-score-bar-wrap">
             <div className="eval-score-bar"><div className="eval-score-fill" style={{ width: `${avgRelevansi * 10}%`, background: '#10b981' }} /></div>
             <span className="eval-score-num">{avgRelevansi}</span>
           </div>
         </div>
         <div className="eval-summary-card">
-          <div className="eval-summary-label">Rata-rata Teknis</div>
+          <div className="eval-summary-label">Average Technical</div>
           <div className="eval-score-bar-wrap">
             <div className="eval-score-bar"><div className="eval-score-fill" style={{ width: `${avgTeknis * 10}%`, background: '#F28C50' }} /></div>
             <span className="eval-score-num">{avgTeknis}</span>
@@ -453,8 +453,8 @@ function EvaluationView() {
       {filtered.length === 0 ? (
         <div className="empty">
           <div className="empty-icon">&#x1f50d;</div>
-          <p>Belum ada data evaluasi</p>
-          <p style={{ fontSize: 13, marginTop: 8 }}>Jalankan workflow evaluasi di n8n untuk mengisi data</p>
+          <p>No evaluation data yet</p>
+          <p style={{ fontSize: 13, marginTop: 8 }}>Run the evaluation workflow in n8n to populate data</p>
         </div>
       ) : (
         <div className="table-wrap">
@@ -470,7 +470,7 @@ function EvaluationView() {
                 <th>Teknis</th>
                 <th>Total</th>
                 <th>Versi</th>
-                <th>Tanggal</th>
+                <th>Date</th>
               </tr>
             </thead>
             <tbody>
@@ -528,13 +528,13 @@ function EvaluationRow({ evaluation: e, isExpanded, onToggle }) {
                 <div className="eval-detail-section">
                   <h4>Output Thread</h4>
                   <div className="eval-output-text">
-                    {e.output_thread || 'Tidak ada output'}
+                    {e.output_thread || 'No output'}
                   </div>
                 </div>
                 <div className="eval-detail-section">
                   <h4>Alasan Judge</h4>
                   <div className="eval-output-text">
-                    {e.alasan_judge || 'Tidak ada alasan'}
+                    {e.alasan_judge || 'No reason provided'}
                   </div>
                 </div>
               </div>

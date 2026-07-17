@@ -30,7 +30,7 @@ export default function Login() {
           <img src="/src/assets/ThreadFlow.svg" alt="ThreadFlow" style={{ height: 48 }} />
         </div>
         <h1 className="login-title">ThreadFlow</h1>
-        <p className="login-subtitle">Masuk ke dashboard</p>
+        <p className="login-subtitle">Sign in to dashboard</p>
 
         <form onSubmit={handleLogin} className="login-form">
           <div className="login-field">
@@ -57,7 +57,7 @@ export default function Login() {
           {error && <div className="login-error">{error}</div>}
 
           <button type="submit" className="login-btn" disabled={loading}>
-            {loading ? 'Masuk...' : 'Masuk'}
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
       </div>

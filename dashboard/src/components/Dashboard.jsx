@@ -98,6 +98,9 @@ export default function Dashboard({ activeTab }) {
       {activeTab === 'history' && (
         <HistoryView history={history} />
       )}
+      {activeTab === 'evaluation' && (
+        <EvaluationView />
+      )}
     </div>
   )
 }
@@ -350,4 +353,240 @@ const refreshBtn = {
   cursor: 'pointer',
   fontSize: 13,
   fontWeight: 500,
+}
+
+function EvaluationView() {
+  const [evaluations, setEvaluations] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [selectedVersion, setSelectedVersion] = useState('all')
+  const [expandedId, setExpandedId] = useState(null)
+
+  useEffect(() => { fetchEvaluations() }, [])
+
+  async function fetchEvaluations() {
+    setLoading(true)
+    const { data } = await supabase
+      .from('evaluations')
+      .select('*')
+      .order('created_at', { ascending: false })
+    setEvaluations(data || [])
+    setLoading(false)
+  }
+
+  const versions = [...new Set(evaluations.map(e => e.prompt_version).filter(Boolean))]
+
+  const filtered = selectedVersion === 'all'
+    ? evaluations
+    : evaluations.filter(e => e.prompt_version === selectedVersion)
+
+  const avgPersona = filtered.length ? (filtered.reduce((s, e) => s + (e.skor_persona || 0), 0) / filtered.length).toFixed(1) : '-'
+  const avgCliche = filtered.length ? (filtered.reduce((s, e) => s + (e.skor_cliche || 0), 0) / filtered.length).toFixed(1) : '-'
+  const avgRelevansi = filtered.length ? (filtered.reduce((s, e) => s + (e.skor_relevansi || 0), 0) / filtered.length).toFixed(1) : '-'
+  const avgTeknis = filtered.length ? (filtered.reduce((s, e) => s + (e.skor_teknis || 0), 0) / filtered.length).toFixed(1) : '-'
+  const avgTotal = filtered.length ? (filtered.reduce((s, e) => s + (e.skor_total || 0), 0) / filtered.length).toFixed(1) : '-'
+
+  if (loading) return <div className="loading">Loading evaluations...</div>
+
+  return (
+    <div>
+      <div className="section-header">
+        <h1 style={{ fontSize: 24, fontWeight: 700 }}>Evaluation</h1>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <select
+            value={selectedVersion}
+            onChange={e => setSelectedVersion(e.target.value)}
+            style={selectStyle}
+          >
+            <option value="all">Semua Versi</option>
+            {versions.map(v => (
+              <option key={v} value={v}>{v}</option>
+            ))}
+          </select>
+          <button onClick={fetchEvaluations} style={refreshBtn}>Refresh</button>
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="eval-summary-grid">
+        <div className="eval-summary-card">
+          <div className="eval-summary-label">Total Evaluasi</div>
+          <div className="eval-summary-value">{filtered.length}</div>
+        </div>
+        <div className="eval-summary-card">
+          <div className="eval-summary-label">Rata-rata Total</div>
+          <div className="eval-summary-value" style={{ color: getScoreColor(avgTotal) }}>{avgTotal}<span style={{ fontSize: 14, color: '#71717a' }}>/40</span></div>
+        </div>
+        <div className="eval-summary-card">
+          <div className="eval-summary-label">Rata-rata Persona</div>
+          <div className="eval-score-bar-wrap">
+            <div className="eval-score-bar"><div className="eval-score-fill" style={{ width: `${avgPersona * 10}%`, background: '#6366f1' }} /></div>
+            <span className="eval-score-num">{avgPersona}</span>
+          </div>
+        </div>
+        <div className="eval-summary-card">
+          <div className="eval-summary-label">Rata-rata Anti-Cliche</div>
+          <div className="eval-score-bar-wrap">
+            <div className="eval-score-bar"><div className="eval-score-fill" style={{ width: `${avgCliche * 10}%`, background: '#f59e0b' }} /></div>
+            <span className="eval-score-num">{avgCliche}</span>
+          </div>
+        </div>
+        <div className="eval-summary-card">
+          <div className="eval-summary-label">Rata-rata Relevansi</div>
+          <div className="eval-score-bar-wrap">
+            <div className="eval-score-bar"><div className="eval-score-fill" style={{ width: `${avgRelevansi * 10}%`, background: '#10b981' }} /></div>
+            <span className="eval-score-num">{avgRelevansi}</span>
+          </div>
+        </div>
+        <div className="eval-summary-card">
+          <div className="eval-summary-label">Rata-rata Teknis</div>
+          <div className="eval-score-bar-wrap">
+            <div className="eval-score-bar"><div className="eval-score-fill" style={{ width: `${avgTeknis * 10}%`, background: '#3b82f6' }} /></div>
+            <span className="eval-score-num">{avgTeknis}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Evaluation Table */}
+      {filtered.length === 0 ? (
+        <div className="empty">
+          <div className="empty-icon">&#x1f50d;</div>
+          <p>Belum ada data evaluasi</p>
+          <p style={{ fontSize: 13, marginTop: 8 }}>Jalankan workflow evaluasi di n8n untuk mengisi data</p>
+        </div>
+      ) : (
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Pillar</th>
+                <th>Angle</th>
+                <th>Topic</th>
+                <th>Persona</th>
+                <th>Anti-Cliche</th>
+                <th>Relevansi</th>
+                <th>Teknis</th>
+                <th>Total</th>
+                <th>Versi</th>
+                <th>Tanggal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(e => (
+                <EvaluationRow
+                  key={e.id}
+                  evaluation={e}
+                  isExpanded={expandedId === e.id}
+                  onToggle={() => setExpandedId(expandedId === e.id ? null : e.id)}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function EvaluationRow({ evaluation: e, isExpanded, onToggle }) {
+  return (
+    <>
+      <tr
+        onClick={onToggle}
+        style={{ cursor: 'pointer' }}
+      >
+        <td>
+          <span className={`pillar-tag ${getPillarClass(e.pillar_name)}`}>
+            {e.pillar_name}
+          </span>
+        </td>
+        <td>{e.angle}</td>
+        <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {e.topic || '-'}
+        </td>
+        <td><ScoreCell score={e.skor_persona} color="#6366f1" /></td>
+        <td><ScoreCell score={e.skor_cliche} color="#f59e0b" /></td>
+        <td><ScoreCell score={e.skor_relevansi} color="#10b981" /></td>
+        <td><ScoreCell score={e.skor_teknis} color="#3b82f6" /></td>
+        <td>
+          <span style={{ fontWeight: 700, color: getScoreColor(e.skor_total) }}>
+            {e.skor_total || '-'}
+          </span>
+        </td>
+        <td>
+          <span className="eval-version-tag">{e.prompt_version || '-'}</span>
+        </td>
+        <td>{formatDate(e.created_at)}</td>
+      </tr>
+      {isExpanded && (
+        <tr>
+          <td colSpan={10} style={{ padding: 0 }}>
+            <div className="eval-detail">
+              <div className="eval-detail-grid">
+                <div className="eval-detail-section">
+                  <h4>Output Thread</h4>
+                  <div className="eval-output-text">
+                    {e.output_thread || 'Tidak ada output'}
+                  </div>
+                </div>
+                <div className="eval-detail-section">
+                  <h4>Alasan Judge</h4>
+                  <div className="eval-output-text">
+                    {e.alasan_judge || 'Tidak ada alasan'}
+                  </div>
+                </div>
+              </div>
+              {e.model_used && (
+                <div style={{ marginTop: 12, fontSize: 12, color: '#71717a' }}>
+                  Model: {e.model_used}
+                </div>
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  )
+}
+
+function ScoreCell({ score, color }) {
+  if (score == null) return <span style={{ color: '#52525b' }}>-</span>
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{
+        width: 40,
+        height: 6,
+        background: '#27272a',
+        borderRadius: 3,
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          width: `${score * 10}%`,
+          height: '100%',
+          background: color,
+          borderRadius: 3,
+          transition: 'width 0.3s',
+        }} />
+      </div>
+      <span style={{ fontSize: 13, fontWeight: 600, color }}>{score}</span>
+    </div>
+  )
+}
+
+function getScoreColor(score) {
+  if (score == null) return '#71717a'
+  const n = Number(score)
+  if (n >= 32) return '#34d399'
+  if (n >= 24) return '#fbbf24'
+  return '#f87171'
+}
+
+const selectStyle = {
+  background: '#27272a',
+  border: '1px solid #3f3f46',
+  color: '#e4e4e7',
+  padding: '8px 12px',
+  borderRadius: 8,
+  fontSize: 13,
+  cursor: 'pointer',
+  outline: 'none',
 }

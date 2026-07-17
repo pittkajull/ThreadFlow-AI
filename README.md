@@ -15,6 +15,7 @@ ThreadFlow adalah sistem otomatis yang membantu menjaga konsistensi posting di T
 - Edit manual dan AI-assisted revision
 - Publish otomatis ke Threads via Zernio
 - **Dashboard** — Monitor semua aktivitas konten dari satu halaman
+- **Evaluasi Otomatis** — AI Judge menilai kualitas konten secara otomatis tiap kali generate
 
 ## Tech Stack
 
@@ -65,6 +66,7 @@ ThreadFlow adalah sistem otomatis yang membantu menjaga konsistensi posting di T
 | `drafts` | Draft konten yang menunggu approval atau sudah diproses |
 | `thread_posts` | Individual post dalam sebuah thread (satu draft bisa multi-post) |
 | `history` | Arsip konten yang sudah dipublish untuk referensi anti-pengulangan |
+| `evaluations` | Hasil evaluasi kualitas konten dari AI Judge (skor per kriteria) |
 
 ### Status Draft
 
@@ -123,6 +125,27 @@ Telegram Trigger (Message + Callback Query)
 
 Lihat [docs/dokumentasi-lengkap.md](docs/dokumentasi-lengkap.md) untuk detail alur workflow.
 
+### Evaluasi Otomatis (AI Judge)
+
+Setiap kali konten di-generate, workflow secara otomatis mengevaluasi kualitas output melalui AI Judge:
+
+```
+Code in JavaScript7 (format output)
+    ├─→ Create a row (simpan draft) ──→ sisa workflow
+    └─→ AI Judge ──→ Merge Scores ──→ Save Evaluation
+```
+
+**Kriteria Penilaian (skor 1-10):**
+
+| Kriteria | Deskripsi |
+|----------|-----------|
+| **Persona** | Konsistensi dengan persona, nada natural dan kredibel |
+| **Anti-Cliche** | Kebebasan dari formula klise, pendekatan segar |
+| **Relevansi** | Relevansi topik dan potensi engagement |
+| **Teknis** | Kualitas penulisan, transisi antar post, tata bahasa |
+
+Hasil evaluasi tersimpan di tabel `evaluations` dan ditampilkan di dashboard tab **Evaluation**.
+
 ## Dashboard
 
 ThreadFlow menyediakan dashboard berbasis React untuk memonitor semua aktivitas konten dari satu halaman. Dashboard connect langsung ke Supabase dan menampilkan data secara real-time.
@@ -135,6 +158,7 @@ ThreadFlow menyediakan dashboard berbasis React untuk memonitor semua aktivitas 
 | **Calendar** | Tampilan kalender bulanan dengan color-coded events berdasarkan angle (serius, lucu, horror, Q&A, rekap) |
 | **Drafts** | Daftar semua draft lengkap dengan status, pillar, angle, dan jadwal |
 | **History** | Riwayat publikasi konten yang sudah terpublish |
+| **Evaluation** | Skor evaluasi AI Judge per konten, filter by prompt version, detail output + alasan |
 
 ### Color Coding Angle
 
@@ -275,6 +299,9 @@ ZERNIO_ACCOUNT_ID=your_account_id
 | Duplikasi post di Threads | `threadItems` salah | Gunakan `.slice(1)` |
 | Error 409 dari Zernio | Double-tap Approve | Tambahkan cek status sebelum publish |
 | Post tidak terpublish semua | `platformSpecificData` salah posisi | Pastikan di dalam `platforms[0]` |
+| "Model output doesn't fit format" | AI Judge output bukan JSON | Matiin "Require Specific Output Format", pakai parsing manual |
+| "Referenced node doesn't exist" di Merge Scores | Nama node salah | Cek nama node — `$('AI Judge')` harus sesuai nama di canvas |
+| Skor evaluasi null/0 | Regex gagal parse | Pastikan prompt minta format `SKOR_PERSONA: [angka]` |
 
 ### Debug Tips
 
@@ -296,6 +323,7 @@ ZERNIO_ACCOUNT_ID=your_account_id
 - [ ] Workflow reminder otomatis
 - [ ] Stabilisasi & testing produksi
 - [x] Dashboard monitoring (React + Supabase)
+- [x] Evaluasi otomatis dengan AI Judge
 
 ### Phase 3
 - [ ] Ekspansi pillar konten (AI, startup, komunitas, management)
@@ -321,7 +349,8 @@ ThreadFlow/
 │   ├── package.json
 │   └── vite.config.js
 ├── database/
-│   └── schema.sql              # Database schema & seed data
+│   ├── schema.sql              # Database schema & seed data
+│   └── schema-new-supabase.sql # Schema untuk testing di Supabase baru
 ├── docs/
 │   ├── screenshots/            # Workflow screenshots
 │   │   ├── WF1_ThreadFlow.png

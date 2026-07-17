@@ -118,6 +118,35 @@ INSERT INTO public.angle_schedule (pillar_name, day_of_week, time_slot, angle) V
 ('Pilot', 'Minggu', '12:00', 'Horror'),
 ('Pilot', 'Minggu', '16:00', 'Lucu');
 
+-- Table: evaluations
+-- Stores evaluation results from AI judge scoring
+CREATE TABLE public.evaluations (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  pillar_name text NOT NULL,
+  angle text NOT NULL,
+  topic text,
+  output_thread text,
+  skor_persona integer,
+  skor_cliche integer,
+  skor_relevansi integer,
+  skor_teknis integer,
+  skor_total numeric GENERATED ALWAYS AS (
+    COALESCE(skor_persona, 0) + COALESCE(skor_cliche, 0) + COALESCE(skor_relevansi, 0) + COALESCE(skor_teknis, 0)
+  ) STORED,
+  alasan_judge text,
+  prompt_version text DEFAULT 'v1'::text,
+  model_used text,
+  created_at timestamp without time zone DEFAULT now(),
+  CONSTRAINT evaluations_pkey PRIMARY KEY (id)
+);
+
+CREATE INDEX idx_evaluations_prompt_version ON public.evaluations(prompt_version);
+CREATE INDEX idx_evaluations_created_at ON public.evaluations(created_at);
+
+ALTER TABLE public.evaluations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all for authenticated users" ON public.evaluations FOR ALL TO authenticated USING (true) WITH CHECK (true);
+GRANT ALL ON public.evaluations TO service_role;
+
 -- Insert default persona for Pilot pillar
 INSERT INTO public.persona_pillar (pillar_name, persona_text, tone_rules, style_examples) VALUES
 ('Pilot',

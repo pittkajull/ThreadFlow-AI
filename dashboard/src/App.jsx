@@ -38,6 +38,12 @@ function App() {
           >
             History
           </button>
+          <button
+            className={`nav-btn ${activeTab === 'evaluation' ? 'active' : ''}`}
+            onClick={() => setActiveTab('evaluation')}
+          >
+            Evaluation
+          </button>
         </nav>
       </aside>
       <main className="main">

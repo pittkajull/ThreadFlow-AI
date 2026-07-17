@@ -281,3 +281,124 @@
   font-size: 13px;
   color: #71717a;
 }
+
+/* Evaluation Summary Grid */
+.eval-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.eval-summary-card {
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.eval-summary-label {
+  font-size: 12px;
+  color: #71717a;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.eval-summary-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fafafa;
+}
+
+.eval-score-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eval-score-bar {
+  flex: 1;
+  height: 8px;
+  background: #27272a;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.eval-score-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.eval-score-num {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fafafa;
+  min-width: 24px;
+  text-align: right;
+}
+
+/* Evaluation Version Tag */
+.eval-version-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #27272a;
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Evaluation Detail Expand */
+.eval-detail {
+  padding: 20px 24px;
+  background: #111113;
+  border-top: 1px solid #27272a;
+}
+
+.eval-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.eval-detail-section h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.eval-output-text {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #d4d4d8;
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  padding: 14px;
+  max-height: 300px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .eval-summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .eval-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .eval-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

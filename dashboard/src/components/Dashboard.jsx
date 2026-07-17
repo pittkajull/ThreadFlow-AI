@@ -243,14 +243,15 @@ function CalendarView({ drafts, history, schedules, currentMonth, setCurrentMont
 }
 
 const calBtn = {
-  background: '#27272a',
-  border: 'none',
-  color: '#e4e4e7',
+  background: 'rgba(255, 255, 255, 0.06)',
+  border: '1px solid rgba(255, 255, 255, 0.08)',
+  color: '#d4d4d8',
   width: 32,
   height: 32,
-  borderRadius: 6,
+  borderRadius: 8,
   cursor: 'pointer',
   fontSize: 14,
+  transition: 'all 0.2s ease',
 }
 
 function DraftsView({ drafts, onRefresh }) {
@@ -345,7 +346,7 @@ function HistoryView({ history }) {
 }
 
 const refreshBtn = {
-  background: '#6366f1',
+  background: 'linear-gradient(135deg, #E4712D 0%, #d4621a 100%)',
   border: 'none',
   color: 'white',
   padding: '8px 16px',
@@ -353,6 +354,8 @@ const refreshBtn = {
   cursor: 'pointer',
   fontSize: 13,
   fontWeight: 500,
+  transition: 'all 0.2s ease',
+  boxShadow: '0 2px 8px rgba(228, 113, 45, 0.3)',
 }
 
 function EvaluationView() {
@@ -419,7 +422,7 @@ function EvaluationView() {
         <div className="eval-summary-card">
           <div className="eval-summary-label">Rata-rata Persona</div>
           <div className="eval-score-bar-wrap">
-            <div className="eval-score-bar"><div className="eval-score-fill" style={{ width: `${avgPersona * 10}%`, background: '#6366f1' }} /></div>
+            <div className="eval-score-bar"><div className="eval-score-fill" style={{ width: `${avgPersona * 10}%`, background: '#E4712D' }} /></div>
             <span className="eval-score-num">{avgPersona}</span>
           </div>
         </div>
@@ -440,7 +443,7 @@ function EvaluationView() {
         <div className="eval-summary-card">
           <div className="eval-summary-label">Rata-rata Teknis</div>
           <div className="eval-score-bar-wrap">
-            <div className="eval-score-bar"><div className="eval-score-fill" style={{ width: `${avgTeknis * 10}%`, background: '#3b82f6' }} /></div>
+            <div className="eval-score-bar"><div className="eval-score-fill" style={{ width: `${avgTeknis * 10}%`, background: '#F28C50' }} /></div>
             <span className="eval-score-num">{avgTeknis}</span>
           </div>
         </div>
@@ -503,10 +506,10 @@ function EvaluationRow({ evaluation: e, isExpanded, onToggle }) {
         <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {e.topic || '-'}
         </td>
-        <td><ScoreCell score={e.skor_persona} color="#6366f1" /></td>
+        <td><ScoreCell score={e.skor_persona} color="#E4712D" /></td>
         <td><ScoreCell score={e.skor_cliche} color="#f59e0b" /></td>
         <td><ScoreCell score={e.skor_relevansi} color="#10b981" /></td>
-        <td><ScoreCell score={e.skor_teknis} color="#3b82f6" /></td>
+        <td><ScoreCell score={e.skor_teknis} color="#F28C50" /></td>
         <td>
           <span style={{ fontWeight: 700, color: getScoreColor(e.skor_total) }}>
             {e.skor_total || '-'}
@@ -581,12 +584,13 @@ function getScoreColor(score) {
 }
 
 const selectStyle = {
-  background: '#27272a',
-  border: '1px solid #3f3f46',
-  color: '#e4e4e7',
+  background: 'rgba(255, 255, 255, 0.06)',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  color: '#d4d4d8',
   padding: '8px 12px',
   borderRadius: 8,
   fontSize: 13,
   cursor: 'pointer',
   outline: 'none',
+  transition: 'all 0.2s ease',
 }

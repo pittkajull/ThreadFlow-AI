@@ -10,6 +10,7 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [tabKey, setTabKey] = useState(0)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -28,6 +29,7 @@ function App() {
     if (tab === activeTab) return
     setActiveTab(tab)
     setTabKey(k => k + 1)
+    setSidebarOpen(false)
   }
 
   async function handleLogout() {
@@ -48,7 +50,11 @@ function App() {
 
   return (
     <div className="app">
-      <aside className="sidebar">
+      <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
+      <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Menu">
+        <span /><span /><span />
+      </button>
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="logo">
           <img src={logoSvg} alt="ThreadFlow" className="logo-img" />
         </div>

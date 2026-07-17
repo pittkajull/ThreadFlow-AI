@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
-import logoSvg from '../assets/ThreadFlow.svg'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -28,7 +27,7 @@ export default function Login() {
     <div className="login-wrap">
       <div className="login-card">
         <div className="login-logo">
-          <img src={logoSvg} alt="ThreadFlow" style={{ height: 48 }} />
+          <img src="/favicon.svg" alt="ThreadFlow" style={{ height: 48 }} />
         </div>
         <h1 className="login-title">ThreadFlow</h1>
         <p className="login-subtitle">Sign in to dashboard</p>
